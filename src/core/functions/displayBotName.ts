@@ -1,23 +1,10 @@
 /*
-・ iHorizon Discord Bot (https://gitlab.com/ihrz/ihrz)
-
-・ Licensed under the Attribution-NonCommercial-ShareAlike 4.0 International (CC-BY-NC-SA-4.0)
-
-	・   Under the following terms:
-
-		・ Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-
-		・ NonCommercial — You may not use the material for commercial purposes.
-
-		・ ShareAlike — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
-
-		・ No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
-
-
-・ Mainly developed by Kisakay (https://gitlab.com/Kisakay)
-
-・ Copyright © 2020-2026 iHorizon
-*/
+ * iHorizon Discord Bot — https://gitlab.com/ihrz/ihrz
+ * Licensed under the Attribution-NonCommercial-ShareAlike 4.0 International
+ * License: https://creativecommons.org/licenses/by-nc-sa/4.0/
+ * Original work mainly developed by Kisakay (https://gitlab.com/Kisakay).
+ * Copyright © 2020-2026 iHorizon. Modified: Discord embed footer branding uses Gavi.
+ */
 
 import {
 	ButtonInteraction,
@@ -29,23 +16,14 @@ import {
 	StringSelectMenuInteraction,
 	UserContextMenuCommandInteraction
 } from "discord.js";
-import { DatabaseStructure } from "../../../types/database_structure.js";
 import { LanguageData } from "../../../types/languageData.js";
 
 export async function footerBuilder(guildId: string = ""): Promise<{
 	text: string;
 	iconURL: string;
 }> {
-	let botName = (await global.client.db.get(
-		`${guildId}.BOT.botName`
-	)) as DatabaseStructure.DbGuildBotObject["botName"];
-
-	if (!botName) {
-		botName = "iHorizon";
-	}
-
 	return {
-		text: botName,
+		text: "Gavi",
 		iconURL: "attachment://footer_icon.png"
 	};
 }
@@ -105,7 +83,7 @@ export async function displayBotPP(
 ): Promise<{ type: 1 | 2; string: string }> {
 	let botPFP = (await global.client.db.get(
 		`${guildId}.BOT.botPFP`
-	)) as DatabaseStructure.DbGuildBotObject["botPFP"];
+	)) as string | undefined;
 
 	if (!botPFP) {
 		botPFP = global.client.user?.displayAvatarURL({ size: 1024 })!;
