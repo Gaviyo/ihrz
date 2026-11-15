@@ -1,39 +1,31 @@
 /*
-・ iHorizon Discord Bot (https://gitlab.com/ihrz/ihrz)
+ * iHorizon Discord Bot (https://gitlab.com/ihrz/ihrz)
+ * Licensed under the Attribution-NonCommercial-ShareAlike 4.0 International
+ * License: https://creativecommons.org/licenses/by-nc-sa/4.0/
+ * Original work mainly developed by Kisakay (https://gitlab.com/Kisakay).
+ * Copyright © 2020-2026 iHorizon. Modified: Discord-facing language branding.
+ */
 
-・ Licensed under the Attribution-NonCommercial-ShareAlike 4.0 International (CC-BY-NC-SA-4.0)
-
-	・   Under the following terms:
-
-		・ Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-
-		・ NonCommercial — You may not use the material for commercial purposes.
-
-		・ ShareAlike — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
-
-		・ No additional restrictions — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
-
-
-・ Mainly developed by Kisakay (https://gitlab.com/Kisakay)
-
-・ Copyright © 2020-2026 iHorizon
-*/
-
-import { LanguageData } from "../../../types/languageData";
+import { LanguageData } from "../../../types/languageData.js";
 import { AvailableLanguage, LangsData } from "./getLanguageData.ts";
 
 // Built on first use: getLanguageData.ts imports this module too.
 let langCodes: Set<string> | null = null;
 
 const EMOJI_MARKER = "${emoji_";
+const BRAND_PATTERN = /iHorizon/gi;
+
+function replaceBranding(value: string): string {
+	return value.replace(BRAND_PATTERN, "Gavi");
+}
 
 /**
- * Replaces every `${emoji_<Name>}` with the bot's emoji, so no call site has
- * to (or can forget to) replace emojis. Unknown names are left as written.
+ * Replaces every `${emoji_<Name>}` with the bot's emoji and applies the
+ * requested display name consistently to localized Discord-facing text.
  */
 function resolveEmojis(value: string, emojis: Record<string, string>): string {
 	let start = value.indexOf(EMOJI_MARKER);
-	if (start === -1) return value;
+	if (start === -1) return replaceBranding(value);
 
 	let out = "";
 	let from = 0;
@@ -47,7 +39,7 @@ function resolveEmojis(value: string, emojis: Record<string, string>): string {
 		from = end + 1;
 		start = value.indexOf(EMOJI_MARKER, from);
 	}
-	return out + value.slice(from);
+	return replaceBranding(out + value.slice(from));
 }
 
 function withEmojis(
@@ -59,6 +51,16 @@ function withEmojis(
 		resolved[key] = Array.isArray(value)
 			? value.map((line) => resolveEmojis(line, emojis))
 			: resolveEmojis(value, emojis);
+	}
+	return resolved as LanguageData;
+}
+
+function withBranding(lang: LanguageData): LanguageData {
+	const resolved: Record<string, string | string[]> = {};
+	for (const [key, value] of Object.entries(lang)) {
+		resolved[key] = Array.isArray(value)
+			? value.map(replaceBranding)
+			: replaceBranding(value);
 	}
 	return resolved as LanguageData;
 }
@@ -77,9 +79,9 @@ export default async function getLanguageDataByCode(
 	const raw = (await import(`../../lang/${code}.ts`)).default as LanguageData;
 	const emojis = globalThis.client?.iHorizon_Emojis as
 		Record<string, string> | undefined;
-	// Before the emoji sync (ready event) there is nothing to resolve yet:
-	// serve the raw strings and cache only the resolved version.
-	if (!emojis) return raw;
+	// Before the emoji sync (ready event), still apply the chosen display
+	// name. Cache only the emoji-resolved version once emojis are available.
+	if (!emojis) return withBranding(raw);
 
 	const lang = withEmojis(raw, emojis);
 	LangsData[code] = lang;
